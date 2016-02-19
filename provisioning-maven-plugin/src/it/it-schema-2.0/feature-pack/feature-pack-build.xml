@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<build xmlns="urn:wildfly:feature-pack-build:2.0">
+    <config>
+        <!-- Change against schema 1.1: optionally, one can define a set of transformations that
+             will prepare various xml files (subsystems.xml, template.xml, subsystem-templates, ...)
+             using XSL applied on source files from an artifact the present project depends on  -->
+        <transformations>
+            <!--
+            Form A: transform and source elements without GAVT: the path is evaluated in the filesystem of the current maven project  -->
+            <transform path="${basedir}/src/main/resources/xsl/my-transformation.xsl">
+                <source path="subsystem-templates/my-subsystem.xml" />
+                <destination path="subsystem-templates/my-subsystem.xml" />
+            </transform>
+
+            <!--
+            Form B: transform and/or source elements have GA[V]T specified.
+              * The version is optional. If it is not there, the GAV is supposed to be managed in the pom.
+              * GA[V]T is resolved against the curent project's pom.xml
+                and the XSL/XML file is supposed to exists in the GA[V]T artifact under the specified path. -->
+
+            <transform groupId="org.example.group" artifactId="my-transformations" type="jar" path="/xsl/my-transformation.xsl" >
+                <source groupId="org.wildfly.core" artifactId="wildfly-core-feature-pack" type="zip" path="/configuration/standalone/subsystems.xml" />
+                <destination path="configuration/standalone/subsystems.xml" />
+            </transform>
+
+            <!--
+            Furthermore, the transform elements can be nested for the case that we want to apply multiple transformations  -->
+            <transform path="${basedir}/src/main/resources/xsl/my-transformation-2.xsl">
+                <transform path="${basedir}/src/main/resources/xsl/my-transformation-1.xsl">
+                    <source groupId="org.wildfly.core" artifactId="wildfly-core-feature-pack" type="zip" path="/configuration/standalone/subsystems.xml" />
+                </transform>
+                <destination path="configuration/standalone/subsystems.xml" />
+            </transform>
+
+        </transformations>
+
+        <standalone subsystems="configuration/standalone/subsystems.xml" template="configuration/standalone/template.xml"
+            output-file="standalone/configuration/standalone.xml" />
+    </config>
+</build>
